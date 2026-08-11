@@ -1,0 +1,21 @@
+[sources.docker]
+type = "docker_logs"
+
+[transforms.clean]
+type = "remap"
+inputs = ["docker"]
+source = '''
+del(.label)
+'''
+
+[sinks.es]
+type = "elasticsearch"
+inputs = ["clean"]
+endpoints = ["http://elasticsearch:9200"]
+mode = "bulk"
+bulk.index = "logs-%Y.%m.%d"
+
+[sinks.es.auth]
+strategy = "basic"
+user = "elastic"
+password = "qwerty123456"

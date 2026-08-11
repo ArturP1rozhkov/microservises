@@ -67,3 +67,76 @@ services:
       - storage
       - uploader
       - security
+  elasticsearch:
+    image: elasticsearch:8.15.0
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      ELASTIC_PASSWORD: qwerty123456
+    expose:
+      - 9200
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:qwerty123456 http://localhost:9200 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+  kibana:
+    image: kibana:8.15.0
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: qwerty123456
+    ports:
+      - "8081:5601"
+
+  kibana-setup:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      curl -fsS -u elastic:qwerty123456 -X POST http://elasticsearch:9200/_security/user/kibana_system/_password -H 'Content-Type: application/json' -d '{\"password\":\"qwerty123456\"}' &&
+      curl -fsS -u elastic:qwerty123456 -X POST http://elasticsearch:9200/_security/user/admin -H 'Content-Type: application/json' -d '{\"password\":\"qwerty123456\",\"roles\":[\"superuser\"],\"full_name\":\"Admin\"}' &&
+      exit 0;
+      "
+
+  vector:
+    image: timberio/vector:0.41.1-alpine
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command: ["--config", "/etc/vector/vector.toml"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector/vector.toml:/etc/vector/vector.toml:ro
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    depends_on:
+      - security
+      - uploader
+      - storage
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    expose:
+      - 9090
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "8082:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: qwerty123456
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
