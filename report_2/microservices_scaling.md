@@ -1,12 +1,4 @@
----
-type: Курс по DevOPS Home Work
-module: Микросервисы
-lesson_no: 3
-lesson_theme: Микросервисы. Подходы
----
-> [!bookmark]
->
-> **Домашнее задание: <%+ tp.file.title %>**
+
 
 # Домашнее задание к занятию «Микросервисы: подходы»
 
@@ -456,7 +448,3 @@ Grafana не собирает метрики сама: она запрашива
 - Практический tutorial Grafana provisioning. Автоматическое создание Prometheus datasource и импорт dashboard JSON при старте Grafana. https://grafana.com/tutorials/provision-dashboards-and-data-sources/;
 - Grafana datasources. Источники данных, запросы и визуализация метрик. https://grafana.com/docs/grafana/latest/datasources/.
 
-> [!calendar] Дата
-> **Добавлено:** 2026-08-09  16:18
-> **Изменено: **<%+ tp.file.last_modified_date("YYYY-MM-DD HH:mm") %>
-> **Тема задания:** <%+ tp.file.title %>
